@@ -74,3 +74,4 @@ def generate_cute_shorts_bgm(filename="shorts_final_bgm.wav", duration=16.0, sam
 
 if __name__ == '__main__':
     generate_cute_shorts_bgm()
+
