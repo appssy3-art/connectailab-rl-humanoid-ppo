@@ -40,3 +40,4 @@ if __name__ == '__main__':
     o, r, tm, tr, info = env.step(env.action_space.sample())
     print("Custom Step Reward:", r)
     env.close()
+

@@ -191,3 +191,4 @@ def 학습_v4(기존체크포인트='humanoid_ppo_gen1000.pt', 추가걸음=500_
 
 if __name__ == '__main__':
     학습_v4()
+
