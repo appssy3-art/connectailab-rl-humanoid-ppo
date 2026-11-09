@@ -5,16 +5,24 @@
 
 ---
 
-## 🚀 허깅페이스 공개 모델 (Hugging Face Models)
+## 🏆 학습 단계별 3단 진화 비교: [초보] vs [안전] vs [마스터]
 
-| 버전 | 저장소 링크 | 학습 걸음수 | 특징 및 성과 |
-|:---:|:---:|:---:|---|
-| **v1** | [🤗 appssy3/connectailab-rl-solo-build_H-roadster-ppo-v1](https://huggingface.co/appssy3/connectailab-rl-solo-build_H-roadster-ppo-v1) | 500,000 걸음 | **최종 시험 착지율 100.0% 달성** (안전 착지 최적화) |
-| **v2** | [🤗 appssy3/connectailab-rl-solo-build_H-roadster-ppo-v2](https://huggingface.co/appssy3/connectailab-rl-solo-build_H-roadster-ppo-v2) | 1,000,000 걸음 | **연료 절약형 에코 드라이빙 마스터** (평균 점수 +105점 돌파) |
+| 단계 | 모델 버전 | 학습 걸음수 | 평균 보상 점수 | 착지 성공률 | 비행 스타일 및 AI 제어 특징 |
+|:---:|:---:|:---:|:---:|:---:|---|
+| **🌱 초보 (Beginner)** | Baseline | 10만 걸음 (13초) | **`-90.9점`** | **0.0%** | **자세 제어 미숙 & 전원 추락**: 공중에서 회전 분사기를 시험해보지만 착지 궤적을 완성하지 못하고 지면에 충돌 |
+| **🛡️ 안전형 (Safe)** | [**v1 모델**](https://huggingface.co/appssy3/connectailab-rl-solo-build_H-roadster-ppo-v1) | 50만 걸음 (52초) | **`+94.2점`** | **100.0%** | **생존 및 착지 성공 최우선**: 최초 착지(골든 모멘트) 이후 안정적인 소프트 랜딩 성공. 단, 추락이 두려워 연료를 다소 과소비함 |
+| **👑 마스터 (Master)** | [**v2 모델**](https://huggingface.co/appssy3/connectailab-rl-solo-build_H-roadster-ppo-v2) | 100만 걸음 (109초) | **`+105.2점`** | **90 ~ 100%** | **연료 절약형 에코 드라이빙**: 불필요한 낭비 추력을 없애고 꼭 필요한 순간에만 정밀 역분사를 뿜어 패드 정중앙에 수직 안착 |
 
 ---
 
-## 📊 PPO 하이퍼파라미터 및 학습 진행
+## 🚀 허깅페이스 공개 모델 (Hugging Face Models)
+
+* **v1 (안전형 100% 착지)**: [🤗 appssy3/connectailab-rl-solo-build_H-roadster-ppo-v1](https://huggingface.co/appssy3/connectailab-rl-solo-build_H-roadster-ppo-v1)
+* **v2 (마스터 연료 절약형)**: [🤗 appssy3/connectailab-rl-solo-build_H-roadster-ppo-v2](https://huggingface.co/appssy3/connectailab-rl-solo-build_H-roadster-ppo-v2)
+
+---
+
+## 📊 PPO 하이퍼파라미터 및 학습 설정
 
 - **클리핑 범위 (`자르기`)**: `0.1` (±10% 정책 변동 제한)
 - **병렬 환경 수 (`세상수`)**: `10`
@@ -25,11 +33,6 @@
 
 ### 📈 학습 곡선 요약
 ![학습 곡선](learning_curve.png)
-
-1. **0 ~ 15만 걸음**: 점수 `-121점 -> -86점`, 착지율 `0%` (공중에서 회전 감각 탐색)
-2. **20만 ~ 30만 걸음**: 최초 착지 성공 발생! 점수 `+12.4점`, 착지율 `52%` (골든 모멘트 돌파)
-3. **50만 걸음 (v1)**: 점수 `+94.2점`, 착지율 `100.0%`
-4. **100만 걸음 (v2)**: 최고 점수 `+105.2점`, 안정적인 소프트 랜딩 정밀 제어 확립
 
 ---
 
@@ -46,19 +49,4 @@
 ├── learning_curve.png                                  # 학습 보상 및 착지율 추이 시각화
 ├── roadster_ppo_joystick.mp4                           # 최종 착지 시연 동영상
 └── roadster_telemetry.mp4                              # 실시간 추진기 게이지가 포함된 HUD 동영상
-```
-
----
-
-## 🛠️ 실행 방법
-
-```powershell
-# 1. 의존성 설치
-pip install gymnasium imageio imageio-ffmpeg huggingface_hub torch matplotlib pillow
-
-# 2. 50만 걸음 또는 100만 걸음 학습 실행
-python run_ppo_task.py --steps 500000
-
-# 3. HUD 계기판 시각화 동영상 생성
-python make_telemetry.py
 ```
