@@ -14,9 +14,9 @@ class 로드스터(gym.Env):
     def _obs(self):
         x, y, vx, vy, th, w = self.s
         return np.array([x / 5, y / 10, vx / 2, vy / 2, math.sin(th), math.cos(th), w / 2], np.float32)
-    def _모양(self):                                              # 착지대 · 느림 · 똑바름에 가까울수록 높은 점수
+    def _모양(self):                                              # 착지대 정중앙 · 느림 · 똑바름에 가까울수록 높은 점수
         x, y, vx, vy, th, w = self.s; thn = (th + math.pi) % (2 * math.pi) - math.pi
-        return -10 * math.hypot(x / 5, y / 10) - 10 * math.hypot(vx / 2, vy / 2) - 10 * abs(thn)
+        return -20 * abs(x / 2) - 10 * math.hypot(vx / 2, vy / 2) - 10 * abs(thn) - 5 * abs(y / 10)
     def reset(self, seed=None, options=None):
         super().reset(seed=seed); r = self.np_random
         self.s = np.array([r.uniform(-2.5, 2.5), 10.0, r.uniform(-0.8, 0.8), 0.0, math.pi, r.uniform(-0.3, 0.3)], np.float64)
@@ -36,7 +36,9 @@ class 로드스터(gym.Env):
         thn = (th + math.pi) % (2 * math.pi) - math.pi
         if y <= 0:
             끝 = True
-            if abs(x) <= 1.5 and abs(thn) < 0.35 and vy > -1.5 and abs(vx) < 1.2: r += P['착지']; 결과 = '착지'
+            if abs(x) <= 1.5 and abs(thn) < 0.35 and vy > -1.5 and abs(vx) < 1.2:
+                중앙보너스 = max(0.0, 1.0 - abs(x) / 1.5) * 50.0  # 정중앙(x=0)에 가까울수록 최대 +50점 보너스!
+                r += P['착지'] + 중앙보너스; 결과 = '착지'
             else: r += P['추락']; 결과 = '추락'
         elif abs(x) > 8 or y > 16: 끝 = True; r += P['추락']; 결과 = '밖으로'
         잘림 = self.t >= self.MAXT and not 끝
@@ -60,7 +62,9 @@ class 로드스터연속(로드스터):
         thn = (th + math.pi) % (2 * math.pi) - math.pi
         if y <= 0:
             끝 = True
-            if abs(x) <= 1.5 and abs(thn) < 0.35 and vy > -1.5 and abs(vx) < 1.2: r += P['착지']; 결과 = '착지'
+            if abs(x) <= 1.5 and abs(thn) < 0.35 and vy > -1.5 and abs(vx) < 1.2:
+                중앙보너스 = max(0.0, 1.0 - abs(x) / 1.5) * 50.0  # 정중앙(x=0)에 가까울수록 최대 +50점 보너스!
+                r += P['착지'] + 중앙보너스; 결과 = '착지'
             else: r += P['추락']; 결과 = '추락'
         elif abs(x) > 8 or y > 16: 끝 = True; r += P['추락']; 결과 = '밖으로'
         잘림 = self.t >= self.MAXT and not 끝
