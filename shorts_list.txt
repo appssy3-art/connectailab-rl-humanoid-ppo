@@ -1,0 +1,3 @@
+file 'humanoid_gen0_fail.mp4'
+file 'humanoid_gen100_step.mp4'
+file 'humanoid_gen500_run.mp4'

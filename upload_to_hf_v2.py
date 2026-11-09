@@ -83,3 +83,4 @@ api.create_repo(저장소, exist_ok=True)
 api.upload_folder(folder_path=폴더, repo_id=올린주소)
 print(f"🎉 [v2 업로드 완료] -> https://huggingface.co/{올린주소}")
 print(f"   (50판 시험 착지율: {착지점수:.0f}%)")
+
