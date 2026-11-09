@@ -4,7 +4,8 @@
 - v1 (10만 걸음 제자리 균형)
 - v2 (40만 걸음 첫 걸음마)
 - v3 (100만 걸음 고속 질주)
-- v4 (자연스러운 1.45m/s 인간 보행)
+- v4 (150만 걸음 자연스러운 1.45m/s 인간 보행)
+- v5 (250만 걸음 1.6m/s 마라톤 조거)
 """
 import sys
 import os
@@ -18,12 +19,13 @@ MODELS = {
     '1': ('v1 (10만 걸음 서기)', 'humanoid_ppo_gui.pt'),
     '2': ('v2 (40만 걸음 전진)', 'humanoid_ppo_gen500.pt'),
     '3': ('v3 (100만 걸음 질주)', 'humanoid_ppo_gen1000.pt'),
-    '4': ('v4 (자연스러운 보행)', 'humanoid_ppo_natural_v4.pt'),
+    '4': ('v4 (150만 보폭 확장)', 'humanoid_ppo_natural_v4.pt'),
+    '5': ('v5 (250만 마라톤 조깅)', 'humanoid_ppo_gen2500_v5.pt'),
 }
 
-def play(choice='3'):
+def play(choice='5'):
     if choice not in MODELS:
-        choice = '3'
+        choice = '5'
     name, path = MODELS[choice]
     
     if not os.path.exists(path):
@@ -85,5 +87,5 @@ if __name__ == '__main__':
         print("버전을 선택하세요:")
         for k, (n, _) in MODELS.items():
             print(f"  [{k}] {n}")
-        sel = input("선택 (1~4, 기본 3): ").strip()
-        play(sel if sel else '3')
+        sel = input("선택 (1~5, 기본 5): ").strip()
+        play(sel if sel else '5')
