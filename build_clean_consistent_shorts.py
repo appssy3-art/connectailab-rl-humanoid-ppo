@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-휴머노이드 5단계 진화 쇼츠 - '통일된 상단 배너 + 클린 하단 세이프존' 완제품 생성기
-1. 상단: 모든 세대(GEN 0 ~ 2500) 동일한 프리미엄 규격 배너 (맑은고딕 볼드)
+휴머노이드 5단계 진화 쇼츠 - '동적 뱃지 규격 & 통일 상단 배너 & 클린 하단' 완제품 생성기
+1. 상단: 글자 길이에 맞춰 뱃지 배경색이 정확히 감싸고, 타이틀과 절대 겹치지 않도록 동적 좌표 계산
 2. 중앙: 720x720 고화질 MuJoCo 시뮬레이션
 3. 하단: 하단 320px 완전 클린 (쇼츠 UI 짤림 방지 및 사용자 직접 자막 추가 공간)
 4. 오디오: '현수 보이스' 나래이션 + 8-bit BGM 자동 싱크 믹싱
 """
-import os, sys, asyncio, subprocess
+import os, sys, asyncio, subprocess, shutil
 import cv2
 import numpy as np
 import torch
@@ -18,8 +18,8 @@ from train_humanoid_gui import 휴머노이드두뇌, 상태정규화
 from train_humanoid_v5 import NaturalJoggingWrapperV5
 
 FONT_PATH = "C:/Windows/Fonts/malgunbd.ttf"
-FONT_TITLE = ImageFont.truetype(FONT_PATH, 42)
-FONT_SUB = ImageFont.truetype(FONT_PATH, 24)
+FONT_TITLE = ImageFont.truetype(FONT_PATH, 35)
+FONT_SUB = ImageFont.truetype(FONT_PATH, 22)
 
 # 5단계 세대별 메타 정보 및 통일된 상단 타이틀
 CLIPS_INFO = [
@@ -39,7 +39,7 @@ CLIPS_INFO = [
         'badge': 'GEN 100',
         'title': '첫 걸음마 (균형 잡기)',
         'sub': '10만 걸음 · 팔 벌려 필사의 중심잡기',
-        'color': (240, 150, 20),     # 주황
+        'color': (240, 140, 20),     # 주황
         'model': 'humanoid_ppo_gui.pt',
         'voice_text': '10만 번 넘어지더니, 팔을 벌려 필사적으로 중심을 잡기 시작합니다.',
         'voice_rate': '+10%',
@@ -50,7 +50,7 @@ CLIPS_INFO = [
         'badge': 'GEN 500',
         'title': '전진 보행 (첫 스텝)',
         'sub': '50만 걸음 · 다리를 뻗으며 전진 개시',
-        'color': (220, 200, 30),     # 노랑/골드
+        'color': (220, 190, 20),     # 노랑/골드
         'model': 'humanoid_ppo_gen500.pt',
         'voice_text': '50만 세대. 다리를 앞으로 뻗으며 드디어 첫 발을 내딛습니다.',
         'voice_rate': '+10%',
@@ -61,7 +61,7 @@ CLIPS_INFO = [
         'badge': 'GEN 1000',
         'title': '고속 질주 (스프린트)',
         'sub': '100만 걸음 · 10초 연속 폭풍 질주',
-        'color': (50, 180, 255),     # 하늘색
+        'color': (40, 170, 250),     # 하늘색
         'model': 'humanoid_ppo_gen1000.pt',
         'voice_text': '100만 세대 돌파! 쓰러지지 않고 10초 연속 폭풍 질주를 시작합니다.',
         'voice_rate': '+10%',
@@ -72,7 +72,7 @@ CLIPS_INFO = [
         'badge': 'GEN 2500',
         'title': '마라톤 러너 (조거)',
         'sub': '250만 걸음 · 시속 5.6km 완벽한 보행 완성',
-        'color': (180, 50, 240),     # 보라/핑크
+        'color': (180, 50, 230),     # 보라/핑크
         'model': 'humanoid_ppo_gen2500_v5.pt',
         'voice_text': '그리고 250만 걸음 뒤, 시속 5.6km로 달리는 완벽한 마라토너가 되었습니다!',
         'voice_rate': '+10%',
@@ -83,32 +83,44 @@ CLIPS_INFO = [
 def render_unified_frame(sim_frame_rgb, info):
     """
     720x1280 캔버스에:
-    - 상단(y: 50~180): 통일된 세대 배너
+    - 상단(y: 55~185): 글자 길이에 맞춰 뱃지 박스가 정확히 늘어나고 타이틀과 분리되는 스마트 배너
     - 중앙(y: 260~980): 720x720 3D 시뮬레이션
     - 하단(y: 980~1280): 완전 클린 (쇼츠 UI safe zone)
     """
-    canvas_pil = Image.new('RGB', (720, 1280), (14, 18, 24)) # 모던 다크 배경
+    canvas_pil = Image.new('RGB', (720, 1280), (14, 18, 24))
     draw = ImageDraw.Draw(canvas_pil)
 
-    # 1. 상단 통일 배너 카드 (x: 40~680, y: 55~190)
+    # 1. 상단 통일 배너 외곽 카드 (x: 40~680, y: 55~185)
     card_bg = (22, 28, 38)
-    draw.rounded_rectangle([40, 55, 680, 190], radius=16, fill=card_bg, outline=info['color'], width=3)
+    draw.rounded_rectangle([40, 55, 680, 185], radius=16, fill=card_bg, outline=info['color'], width=3)
     
-    # 뱃지 배경 (좌측 상단 태그)
-    draw.rounded_rectangle([60, 75, 230, 125], radius=8, fill=info['color'])
-    draw.text((75, 82), info['badge'], fill=(255, 255, 255), font=FONT_TITLE)
+    # 뱃지 텍스트 너비 동적 측정
+    badge_text = info['badge']
+    bb = draw.textbbox((0, 0), badge_text, font=FONT_TITLE)
+    badge_w = bb[2] - bb[0]
     
-    # 타이틀
-    draw.text((250, 80), info['title'], fill=(255, 255, 255), font=FONT_TITLE)
+    # 뱃지 배경 박스 (텍스트 양옆 14px 패딩 부여)
+    badge_x1 = 60
+    badge_x2 = badge_x1 + badge_w + 28
+    badge_box = [badge_x1, 72, badge_x2, 126]
+    draw.rounded_rectangle(badge_box, radius=8, fill=info['color'])
+    
+    # 뱃지 텍스트 렌더링
+    draw.text((badge_x1 + 14, 78), badge_text, fill=(255, 255, 255), font=FONT_TITLE)
+    
+    # 타이틀 텍스트 렌더링 (뱃지 박스 끝에서 18px 띄워 절대 겹치지 않음!)
+    title_x = badge_x2 + 18
+    draw.text((title_x, 78), info['title'], fill=(255, 255, 255), font=FONT_TITLE)
+    
     # 서브타이틀
-    draw.text((65, 145), info['sub'], fill=(180, 200, 220), font=FONT_SUB)
+    draw.text((62, 142), info['sub'], fill=(185, 205, 225), font=FONT_SUB)
 
     # 2. 중앙 720x720 렌더 화면
     sim_resized = cv2.resize(sim_frame_rgb, (720, 720))
     sim_pil = Image.fromarray(sim_resized)
     canvas_pil.paste(sim_pil, (0, 260))
 
-    # 3. 하단 (980~1280)은 아무 글씨도 넣지 않고 완전 클린하게 유지!
+    # 3. 하단 (980~1280)은 100% 클린 세이프존 유지
 
     return cv2.cvtColor(np.array(canvas_pil), cv2.COLOR_RGB2BGR)
 
@@ -127,7 +139,7 @@ async def generate_voice_clips():
         print(f"  • {item['badge']}: {item['dur']:.2f}초 | \"{item['voice_text']}\"")
 
 def record_clean_video_clips():
-    print("\n🎬 [통일 상단 배너 + 클린 하단 클립 5종 렌더링 시작]...")
+    print("\n🎬 [동적 뱃지 배너 + 클린 하단 클립 5종 렌더링 시작]...")
     part_files = []
 
     for idx, item in enumerate(CLIPS_INFO):
@@ -139,7 +151,6 @@ def record_clean_video_clips():
 
         env = gym.make("Humanoid-v5", render_mode="rgb_array")
         
-        # 모델 로드 (Gen 0은 랜덤)
         brain, norm = None, None
         if item['model'] and os.path.exists(item['model']):
             ckpt = torch.load(item['model'], map_location='cpu', weights_only=False)
@@ -178,7 +189,6 @@ def record_clean_video_clips():
         out.release()
         env.close()
 
-        # 음성 합성 및 H.264 인코딩
         part_mp4 = f"clean_part_{idx}_{item['id']}.mp4"
         cmd = [
             'ffmpeg', '-y',
@@ -199,7 +209,6 @@ def record_clean_video_clips():
         part_files.append(part_mp4)
         print(f"  ✅ {item['badge']} 클린 클립 완성: {part_mp4} ({target_dur:.2f}초)")
 
-    # 5개 파트 결합
     with open('clean_concat_list.txt', 'w', encoding='utf-8') as f:
         for p in part_files:
             f.write(f"file '{p}'\n")
@@ -214,7 +223,6 @@ def record_clean_video_clips():
         temp_concat
     ], check=True, capture_output=True)
 
-    # BGM 믹싱
     final_output = "휴머노이드_통합배너_클린쇼츠_최종본.mp4"
     filter_complex = "[1:a]volume=0.18[bgm];[0:a]volume=1.0[voice];[voice][bgm]amix=inputs=2:duration=first:dropout_transition=2[aout]"
     cmd_final = [
@@ -233,11 +241,8 @@ def record_clean_video_clips():
         final_output
     ]
     subprocess.run(cmd_final, check=True)
-    
-    # 영문명 복사
-    import shutil
     shutil.copy(final_output, "humanoid_shorts_clean_unified.mp4")
-    print(f"\n🎉 [통일 배너 + 클린 하단 최종 완제품 완성!]: {final_output}")
+    print(f"\n🎉 [동적 뱃지 & 무간섭 레이아웃 최종 완성!]: {final_output}")
 
 if __name__ == '__main__':
     asyncio.run(generate_voice_clips())
