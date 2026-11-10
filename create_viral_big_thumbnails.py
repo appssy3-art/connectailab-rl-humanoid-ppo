@@ -182,3 +182,4 @@ def create_big_thumbnails():
 
 if __name__ == "__main__":
     create_big_thumbnails()
+

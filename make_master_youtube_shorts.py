@@ -35,3 +35,4 @@ def build_grand_master_shorts():
 
 if __name__ == '__main__':
     build_grand_master_shorts()
+

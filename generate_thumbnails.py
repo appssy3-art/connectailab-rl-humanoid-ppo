@@ -236,3 +236,4 @@ def make_youtube_16x9_thumbnail():
 if __name__ == "__main__":
     make_shorts_split_thumbnail()
     make_youtube_16x9_thumbnail()
+

@@ -87,3 +87,4 @@ def make_perfect_thumbnail():
 
 if __name__ == "__main__":
     make_perfect_thumbnail()
+
