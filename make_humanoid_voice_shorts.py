@@ -7,11 +7,11 @@
 import os, sys, asyncio, subprocess
 import edge_tts
 
-# 5단계 쇼츠 대본 (현수 멀티링구얼 보이스 특유의 씩씩하고 자연스러운 톤)
+# 5단계 쇼츠 대본 ("3D 세상에" -> "걷는 법을 맡겨봤습니다"로 자연스럽게 전면 수정)
 SCENES = [
     {
         'id': 'v1_gen0',
-        'text': '아무것도 모르는 AI를 3D 세상에 던져봤습니다. 시작하자마자 꽈당!',
+        'text': '아무것도 모르는 AI에게 걷는 법을 맡겨봤습니다. 시작하자마자 꽈당!',
         'video_src': 'humanoid_gen0_fail.mp4',
         'rate': '+12%',
         'pitch': '+0Hz'
@@ -66,11 +66,9 @@ def build_video():
     part_files = []
     
     for i, s in enumerate(SCENES):
-        # 음성 길이에 0.3초 여유 패딩을 주어 자연스러운 호흡 부여
         clip_dur = s['dur'] + 0.3
         part_mp4 = f"part_{i}_{s['id']}.mp4"
         
-        # 비디오 길이를 음성에 맞춰 트리밍/루프
         cmd = [
             'ffmpeg', '-y',
             '-stream_loop', '2',
@@ -90,12 +88,10 @@ def build_video():
         part_files.append(part_mp4)
         print(f"  ✅ 파트 {i+1} 완성 ({clip_dur:.2f}초): {part_mp4}")
 
-    # 모든 파트 결합 리스트 생성
     with open('concat_voice_list.txt', 'w', encoding='utf-8') as f:
         for p in part_files:
             f.write(f"file '{p}'\n")
 
-    # 1차 보이스 비디오 결합
     temp_voice_vid = "temp_voice_concat.mp4"
     subprocess.run([
         'ffmpeg', '-y',
@@ -109,7 +105,6 @@ def build_video():
     total_dur = get_duration(temp_voice_vid)
     print(f"\n📊 총 나래이션 비디오 길이: {total_dur:.2f}초")
 
-    # BGM과 나래이션 오디오 믹싱 (BGM 볼륨은 0.18로 낮춰 음성이 또렷하게 전달되도록 세팅)
     final_output = "휴머노이드_보이스_나래이션_쇼츠_최종본.mp4"
     filter_complex = "[1:a]volume=0.18[bgm];[0:a]volume=1.0[voice];[voice][bgm]amix=inputs=2:duration=first:dropout_transition=2[aout]"
     
@@ -129,7 +124,11 @@ def build_video():
         final_output
     ]
     subprocess.run(cmd_final, check=True)
-    print(f"\n🎉 [보이스 나래이션 + BGM 믹싱 쇼츠 완제품 완성!]: {final_output}")
+    
+    # 영문명 파일도 갱신
+    import shutil
+    shutil.copy(final_output, "humanoid_shorts_voice_final.mp4")
+    print(f"\n🎉 [수정 완료]: {final_output} 및 humanoid_shorts_voice_final.mp4")
 
 if __name__ == '__main__':
     asyncio.run(generate_voices())
