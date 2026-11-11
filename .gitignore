@@ -9,7 +9,6 @@ hf_*/
 *.pt
 *.onnx
 *.mp3
-*.txt
 *.jpg
 check_*
 sample_*
@@ -31,6 +30,13 @@ push_*
 stand_*
 shoe_*
 zoom_*
+frame_*
+raw_*
+clean_voice_*
+voice_v*
+clean_concat_list.txt
+concat_voice_list.txt
+휴머노이드_전체_나래이션_보이스.mp3
 
 !thumbnail_*.png
 !preview_*.png

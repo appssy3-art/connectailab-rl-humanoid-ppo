@@ -1,0 +1,18 @@
+# ConnectAI Lab - Reinforcement Learning (PPO) & Robotics Suite
+# Core Deep Learning & Reinforcement Learning
+torch>=2.0.0
+gymnasium>=1.0.0
+mujoco>=3.0.0
+
+# Model Export & Inference Runtime
+onnx>=1.14.0
+onnxruntime>=1.16.0
+
+# Hugging Face Hub Integration
+huggingface_hub>=0.20.0
+
+# Computer Vision & Media Generation
+Pillow>=9.0.0
+opencv-python>=4.8.0
+numpy>=1.24.0
+
