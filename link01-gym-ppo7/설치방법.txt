@@ -1,0 +1,24 @@
+LINK-01 걷기 시뮬레이터 (강화학습 7강) · CONNECT AI LAB
+
+[코랩]
+1. colab.research.google.com 에서 강화학습_7강_실습_PPO_LINK01_걷기.ipynb 를 엽니다 (파일 > 노트북 업로드).
+2. 왼쪽 폴더 아이콘을 눌러 이 zip 파일(link01-gym-ppo7.zip)을 그대로 올립니다.
+3. CELL 01 부터 차례로 실행합니다. 압축 풀기와 설치는 CELL 01 이 알아서 합니다.
+
+[내 컴퓨터 (맥 · 윈도우 · 리눅스, 파이썬 3.10 이상)]
+1. zip 을 풉니다.
+2. 터미널에서 그 폴더로 이동한 뒤:
+     python -m venv .venv
+     맥/리눅스: source .venv/bin/activate     윈도우: .venv\Scripts\activate
+     pip install "./link01-gym[train]" jupyter
+     jupyter notebook 강화학습_7강_실습_PPO_LINK01_걷기.ipynb
+3. 확인: python -c "import gymnasium as gym, link01_gym; print(gym.make('Link01Walk-v0').reset(seed=0)[0].shape)"
+   → (51,) 이 나오면 준비 끝.
+
+[들어 있는 것]
+  link01-gym/       pip 로 설치하는 시뮬레이터 (gym.make("Link01Walk-v0"), "Link01WalkGuided-v0", "Link01Balance-v0")
+  eval_walk.py      시험 숫자(거리 · 속도 · 넘어짐/분) + 리플레이 영상
+  hub_push.py       허깅페이스 올리기 (토큰은 실행할 때만 입력, 파일에 저장하지 않음)
+  강화학습_7강_실습_PPO_LINK01_걷기.ipynb   실습 노트북 (CELL 05 학습 코드는 직접 작성)
+
+옛 gym 패키지(import gym)는 쓰지 마세요. import gymnasium as gym 으로 바꾸면 같은 코드가 돕니다.

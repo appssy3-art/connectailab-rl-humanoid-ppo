@@ -54,7 +54,7 @@
 
 ---
 
-## 🤗 Hugging Face 모델 허브 (전체 9종)
+## 🤗 Hugging Face 모델 허브 (전체 10종)
 
 공개 배포된 체크포인트(`.pt`, `.onnx`) 및 시연 영상은 Hugging Face Hub에서 즉시 확인하고 다운로드할 수 있습니다:
 
@@ -69,6 +69,7 @@
 | **Humanoid** | [appssy3/connectailab-rl-solo-build-H-v5-Humanoid](https://huggingface.co/appssy3/connectailab-rl-solo-build-H-v5-Humanoid) | PyTorch / Video | 250만보 무결점 마라톤 러너 (1,600점) |
 | **Duck** | [appssy3/connectailab-rl-solo-build-H-MicroDuck-100k](https://huggingface.co/appssy3/connectailab-rl-solo-build-H-MicroDuck-100k) | PyTorch / ONNX | 평발 신발 보행 오리 |
 | **Duck** | [appssy3/connectailab-rl-solo-build-H-RollerDuck-Skate](https://huggingface.co/appssy3/connectailab-rl-solo-build-H-RollerDuck-Skate) | ONNX Runtime | 롤러스케이트 무동력 글라이딩 오리 |
+| **Physical AI** | [**appssy3/connectailab-rl-solo-build-H-v1-link01-walk-ppo**](https://huggingface.co/appssy3/connectailab-rl-solo-build-H-v1-link01-walk-ppo) | SB3 / Web JSON | **LINK-01 14-DoF 2족 보행 로봇 (100만보 PPO v1)** |
 
 ---
 
@@ -79,6 +80,9 @@ Windows 환경에서 더블클릭 한 번으로 훈련된 AI 에이전트의 3D 
 ```bash
 # 휴머노이드 5단계 세대별 관찰기 실행
 휴머노이드_모델별_3D_관찰기.bat
+
+# LINK-01 2족 보행 로봇 실시간 3D 관찰기 실행
+LINK01_실시간_3D_관찰기.bat
 ```
 - 번호 선택 (1~5) 시 해당 세대의 MuJoCo 3D 물리 렌더링 창이 즉시 실행되어 실시간 관절 토크와 보행 모습을 관찰할 수 있습니다.
 

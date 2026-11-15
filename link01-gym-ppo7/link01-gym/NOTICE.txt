@@ -1,0 +1,6 @@
+Mechanical model: Open Duck Mini V2 by its contributors, Apache-2.0.
+Pinned source: b23317a485b3cec7d8417f352478778b3475173c. XML and meshes copied unmodified.
+CONNECT AI LAB: browser environment, policy export, rendering and training kit.
+No Microduck assets are included. No custom LINK-01 armor or hardware validation is included.
+Browser physics: MuJoCo 3.15.0, Google DeepMind, Apache-2.0.
+Recorded training/evaluation physics: MuJoCo 3.3.7. Browser results may differ.

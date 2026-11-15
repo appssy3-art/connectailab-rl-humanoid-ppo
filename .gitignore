@@ -1,5 +1,6 @@
 __pycache__/
 hf_*/
+runs/
 *.tmp
 *.pyc
 *.mp4
@@ -8,6 +9,7 @@ hf_*/
 *.zip
 *.pt
 *.onnx
+*.pkl
 *.mp3
 *.jpg
 check_*

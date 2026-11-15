@@ -1,0 +1,21 @@
+# link01-gym · CONNECT AI LAB
+
+**LINK-01** 두 발 로봇(MuJoCo)을 Gymnasium 환경으로 받습니다. 강화학습 7강: PPO로 걷기를 처음부터 배웁니다.
+
+```bash
+pip install ./link01-gym            # 또는 zip을 풀고 그 폴더에서 pip install .
+```
+```python
+import gymnasium as gym, link01_gym
+env = gym.make("Link01Walk-v0", render_mode="rgb_array")
+obs, info = env.reset(seed=0)        # obs 51개, 행동 14개
+```
+
+| 이름 | 하는 일 |
+|---|---|
+| Link01Walk-v0 | 앞으로 걷기 (속도 명령 0.10 ~ 0.25 m/s 따라가기), 처음부터 PPO |
+| Link01WalkGuided-v0 | 같은 세상 + 우리 CPG 참고 걸음의 리듬 힌트 보상 |
+| Link01Balance-v0 | EZERAI 원래 균형 과제 |
+
+- 관측 51 / 행동 14 = EZERAI 원본 계약 그대로 (`env.py` 원본 복사, 바꾸지 않음).
+- 옛 `gym` 패키지: 쓰지 마세요. `import gymnasium as gym` 으로 바꾸면 같은 코드가 돕니다.

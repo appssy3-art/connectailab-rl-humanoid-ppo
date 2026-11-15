@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "link01-gym"
+version = "0.7.0"
+description = "CONNECT AI LAB LINK-01 walking environments for Gymnasium (MuJoCo)"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = ["gymnasium>=0.29", "mujoco>=3.1", "numpy"]
+
+[project.optional-dependencies]
+train = ["stable-baselines3>=2.3", "torch", "imageio[ffmpeg]", "huggingface_hub"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+link01_gym = ["model/*", "manifest.json", "reference_gait.npz"]
