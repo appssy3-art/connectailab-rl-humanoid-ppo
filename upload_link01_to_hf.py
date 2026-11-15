@@ -67,7 +67,7 @@ def upload_link01():
         json.dump(meta, f, indent=2, ensure_ascii=False)
         
     # 3. 고품질 README.md 모델 카드 생성
-    readme_content = """---
+    readme_content = r"""---
 tags:
 - reinforcement-learning
 - ppo
@@ -172,18 +172,19 @@ for _ in range(1000):
 
 ---
 
-## 🌐 ConnectAI Lab SoloBuild Hub & Community
+## 🔗 관련 링크 및 채널 (Official Links)
 
-이 프로젝트는 **ConnectAI Lab SoloBuild** 로보틱스 연구 시리즈의 공식 모델입니다:
+> 💡 **ConnectAI Lab SoloBuild**의 전체 피지컬 AI 로봇 및 강화학습 연구 생태계를 둘러보세요:
 
-* 🤗 **Hugging Face Hub**: [https://huggingface.co/appssy3](https://huggingface.co/appssy3)  
-  *(Roadster PPO, MuJoCo Humanoid v1~v5, MicroDuck-100k, RollerDuck-Skate 등 전체 모델 컬렉션)*
-* 📺 **공식 YouTube 채널**: [https://www.youtube.com/@solobuild.studio](https://www.youtube.com/@solobuild.studio)  
-  *(피지컬 AI 로봇 및 강화학습 3D 진화 쇼츠/롱폼 콘텐츠)*
-* 🐙 **GitHub 공식 코드베이스**: [https://github.com/appssy3-art/connectailab-rl-humanoid-ppo](https://github.com/appssy3-art/connectailab-rl-humanoid-ppo)
+| 채널 / 허브 | 링크 | 설명 |
+| :--- | :--- | :--- |
+| 🚀 **개발자 허브 (SOLO BUILD-H)** | [**전체 프로젝트 & 웹 앱 둘러보기 ↗**](https://appssy3-art.github.io/solo-build-studio/) | 피지컬 AI 로봇, 강화학습 웹 시뮬레이터 및 솔로빌드 전체 포트폴리오 |
+| 📺 **공식 유튜브 채널 (솔로빌드)** | [**개발 과정 및 쇼츠 영상 보기 ↗**](https://www.youtube.com/@solobuild.studio) | 로봇 시뮬레이션 진화 과정, 3D 보행 훈련 쇼츠 및 개발 브이로그 |
+| 🤗 **Hugging Face Hub** | [**appssy3 모델 전체 컬렉션 ↗**](https://huggingface.co/appssy3) | 뒤집힌 로드스터, 17-DoF 휴머노이드, 오리 로봇 및 LINK-01 모델 허브 |
+| 🐙 **GitHub 공식 코드베이스** | [**connectailab-rl-humanoid-ppo ↗**](https://github.com/appssy3-art/connectailab-rl-humanoid-ppo) | 강화학습 PPO 전체 파이썬 소스코드 및 3D 관찰기 배치 파일 |
 
 ---
-**ConnectAI Lab · SoloBuild Project** | Author: **appssy3**
+**ConnectAI Lab · SoloBuild Project** | Lead Researcher: **appssy3**
 """
     with open(os.path.join(out_dir, "README.md"), "w", encoding="utf-8") as f:
         f.write(readme_content)
@@ -202,3 +203,4 @@ for _ in range(1000):
 
 if __name__ == '__main__':
     upload_link01()
+
