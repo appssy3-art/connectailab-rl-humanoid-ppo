@@ -1,0 +1,65 @@
+<mujoco model="rolling_agent_rl_world">
+  <compiler angle="degree" coordinate="local"/>
+  
+  <option gravity="0 0 -9.81" timestep="0.01" integrator="RK4">
+    <flag contact="enable"/>
+  </option>
+
+  <visual>
+    <headlight ambient="0.45 0.45 0.45" diffuse="0.8 0.8 0.8" specular="0.3 0.3 0.3"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+    <global offwidth="1920" offheight="1080"/>
+  </visual>
+
+  <asset>
+    <!-- Sky & Textures -->
+    <texture type="skybox" builtin="gradient" rgb1="0.25 0.45 0.65" rgb2="0.05 0.1 0.18" width="512" height="512"/>
+    <texture name="grid_arena" type="2d" builtin="checker" width="512" height="512" rgb1="0.22 0.26 0.32" rgb2="0.15 0.18 0.23"/>
+    <material name="mat_arena" texture="grid_arena" texrepeat="10 10" reflectance="0.2" roughness="0.7"/>
+
+    <!-- Ball Texture with Stripes to visualize rolling rotation -->
+    <texture name="ball_tex" type="cube" builtin="checker" width="256" height="256" rgb1="1.0 0.45 0.0" rgb2="0.12 0.12 0.12"/>
+    <material name="mat_ball" texture="ball_tex" texrepeat="3 3" specular="0.8" shininess="0.6" reflectance="0.3"/>
+
+    <!-- Boundary & Target Materials -->
+    <material name="mat_boundary" rgba="1.0 0.2 0.25 0.9" emission="0.8"/>
+    <material name="mat_target" rgba="0.1 1.0 0.4 0.95" emission="0.95" specular="1.0"/>
+    <material name="mat_target_ring" rgba="0.0 0.9 1.0 0.75" emission="0.7"/>
+    <material name="mat_core" rgba="1.0 0.9 0.1 0.95" emission="0.8"/>
+  </asset>
+
+  <worldbody>
+    <!-- Main Default Camera (경기장 전체가 완벽하게 한눈에 들어오는 시점) -->
+    <camera name="main_cam" pos="0 -9.0 7.5" xyaxes="1 0 0 0 0.64 0.77"/>
+
+    <!-- Lighting -->
+    <light directional="true" pos="0 0 12" dir="0 0 -1" castshadow="true" diffuse="0.9 0.9 0.9" specular="0.3 0.3 0.3"/>
+    <light directional="false" pos="3 3 7" diffuse="0.5 0.5 0.5"/>
+
+    <!-- Floor Plane: 10m x 10m Platform (from -5 to +5) -->
+    <geom name="ground_plane" type="plane" size="5.0 5.0 0.1" material="mat_arena" friction="2.0 0.05 0.002" condim="4"/>
+
+    <!-- Red Visual Boundary Lines (경계선: 이 선을 넘어가면 -5점 처벌) -->
+    <geom name="bound_north" type="box" size="5.05 0.06 0.04" pos="0 5.0 0.02" material="mat_boundary" contype="0" conaffinity="0"/>
+    <geom name="bound_south" type="box" size="5.05 0.06 0.04" pos="0 -5.0 0.02" material="mat_boundary" contype="0" conaffinity="0"/>
+    <geom name="bound_east"  type="box" size="0.06 5.05 0.04" pos="5.0 0 0.02" material="mat_boundary" contype="0" conaffinity="0"/>
+    <geom name="bound_west"  type="box" size="0.06 5.05 0.04" pos="-5.0 0 0.02" material="mat_boundary" contype="0" conaffinity="0"/>
+
+    <!-- Dynamic Mocap Target (10점 보상 목표물) -->
+    <body name="target" mocap="true" pos="3.0 2.5 0.2">
+      <geom name="target_ring" type="cylinder" size="0.45 0.02" material="mat_target_ring" contype="0" conaffinity="0" pos="0 0 0.01"/>
+      <geom name="target_core" type="cylinder" size="0.30 0.05" material="mat_target" contype="0" conaffinity="0" pos="0 0 0.04"/>
+      <geom name="target_pillar" type="cylinder" size="0.04 0.5" material="mat_target" contype="0" conaffinity="0" pos="0 0 0.55"/>
+      <geom name="target_sphere" type="sphere" size="0.16" material="mat_target" contype="0" conaffinity="0" pos="0 0 1.15"/>
+    </body>
+
+    <!-- Rolling AI Ball Agent (Sphere) -->
+    <body name="agent_ball" pos="0 0 0.25">
+      <freejoint name="agent_joint"/>
+      <geom name="ball_shell" type="sphere" size="0.25" mass="1.5" material="mat_ball" 
+            friction="2.2 0.05 0.002" condim="4" solref="0.01 1" solimp="0.9 0.95 0.001"/>
+      <geom name="ball_axis_x" type="cylinder" size="0.035 0.24" material="mat_core" contype="0" conaffinity="0" euler="90 0 0"/>
+      <geom name="ball_axis_y" type="cylinder" size="0.035 0.24" material="mat_core" contype="0" conaffinity="0" euler="0 90 0"/>
+    </body>
+  </worldbody>
+</mujoco>

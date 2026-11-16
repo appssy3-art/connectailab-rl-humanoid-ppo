@@ -42,3 +42,6 @@ concat_voice_list.txt
 
 !thumbnail_*.png
 !preview_*.png
+
+# Open Duck Mini (별도 저장소 클론)
+Open_Duck_Mini/
