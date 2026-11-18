@@ -44,6 +44,23 @@ class SuperFastDuckCallback(BaseCallback):
         self.last_log_step = 0
 
     def _on_step(self) -> bool:
+        # GUI 3D 실시간 뷰어 실행 시 50 FPS 속도 조절 및 카메라 추종
+        if hasattr(self.training_env, "envs"):
+            raw_env = self.training_env.envs[0].unwrapped
+            if hasattr(raw_env, "render_mode") and raw_env.render_mode == "human":
+                viewer = getattr(raw_env, "viewer", None)
+                if viewer is not None:
+                    if not viewer.is_running():
+                        print("\n[알림] 3D 시뮬레이션 창이 닫혀 학습을 안전하게 저장하고 종료합니다.")
+                        return False
+                    # 카메라가 로봇의 전진 위치를 부드럽게 추종
+                    cur_x = raw_env.data.qpos[0]
+                    cur_y = raw_env.data.qpos[1]
+                    viewer.cam.lookat[0] = cur_x + 0.1
+                    viewer.cam.lookat[1] = cur_y
+                    viewer.cam.lookat[2] = 0.16
+                time.sleep(0.015)
+
         # 벡터 환경의 각 환경별 done 및 info 확인
         dones = self.locals["dones"]
         infos = self.locals["infos"]
@@ -59,9 +76,10 @@ class SuperFastDuckCallback(BaseCallback):
                 if fallen:
                     self.total_falls += 1
 
-                # 최고 기록 경신 체크
-                if steps > self.best_ep_steps:
-                    self.best_ep_steps = steps
+                # 최고 전진 보행 기록 경신 체크 (거리 최우선 + 생존 시간 결합)
+                is_new_best = (dist > self.best_dist and steps >= 80) or (dist >= self.best_dist and steps > self.best_ep_steps)
+                if is_new_best:
+                    self.best_ep_steps = max(self.best_ep_steps, steps)
                     self.best_dist = max(self.best_dist, dist)
                     best_path = os.path.join(self.save_path, "open_duck_best_balance.zip")
                     best_pt = os.path.join(self.save_path, "open_duck_best_balance.pt")
@@ -70,7 +88,7 @@ class SuperFastDuckCallback(BaseCallback):
                         torch.save(self.model.policy.state_dict(), best_pt)
                     except Exception:
                         pass
-                    print(f"⭐ [최고 기록 경신!] 에피소드 {self.total_episodes}회 | 생존: {steps}스텝 ({steps*0.02:.2f}초) | 전진: {dist:.2f}m -> 저장: {best_path}")
+                    print(f"⭐ [최고 전진 기록 경신!] 에피소드 {self.total_episodes}회 | 전진: {dist:.2f}m | 생존: {steps}스텝 ({steps*0.02:.2f}초) -> 저장: {best_path}")
 
         # 주기적인 진행 상황 콘솔 출력 (약 4,000 스텝마다)
         if self.n_calls - self.last_log_step >= self.check_freq:

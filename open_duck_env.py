@@ -190,7 +190,7 @@ class OpenDuckEnv(gym.Env):
         head_pitch = float(self.data.qpos[13])
 
         # =====================================================================
-        # 🎯 밸런스 & 보행 보상 함수 (1. 기립 + 2. 좌우 체중이동 + 3. 발디딤 체공)
+        # 🎯 밸런스 & 보행 보상 함수 (1. 기립 + 2. 좌우 체중이동 + 3. 적극적 전진 보행)
         # =====================================================================
         # 1. 꼿꼿한 기립 보상 (Upright bonus)
         r_upright = 3.0 * max(0.0, upvector_z)
@@ -198,41 +198,50 @@ class OpenDuckEnv(gym.Env):
         # 2. 적정 높이 유지 보상 (z ≈ 0.16m)
         r_height = 2.0 * math.exp(-40.0 * (trunk_z - 0.16) ** 2)
 
-        # 3. 생존 보너스
-        r_alive = 1.0
+        # 3. 생존 보너스 대폭 축소 (제자리 서 있기 꼼수 차단!)
+        r_alive = 0.05
 
-        # 4. 전진 보행 속도 & 거리 전진 보상 (Forward Walking)
-        r_forward = 4.0 * min(max(local_vx, 0.0), 0.35) + 30.0 * forward_progress
+        # 4. 적극적 전진 보행 속도 & 거리 전진 보상 (Target speed 0.20 m/s)
+        # - 목표 속도 0.20 m/s 추종 가우시안 보상
+        r_vel = 4.0 * math.exp(-25.0 * (local_vx - 0.20) ** 2)
+        # - 앞으로 나아갈 때마다 전진 거리에 비례하여 강력한 전진 보너스 (+80점/m)
+        r_progress = 80.0 * forward_progress
+        r_forward = r_vel + r_progress
 
-        # 5. 좌우 체중 이동 유도 (Lateral Sway, 오리 걸음 리듬)
-        # 보행 위상(phase)에 따라 좌우로 자연스럽게 체중을 실어주도록 유도
-        target_vy = 0.06 * math.sin(self.phase)
-        r_sway = 1.2 * math.exp(-30.0 * (local_vy - target_vy) ** 2)
+        # 5. 좌우 체중 이동 유도 (Lateral Sway, 오리 걸음 리듬 1.25 Hz)
+        target_vy = 0.08 * math.sin(self.phase)
+        r_sway = 1.5 * math.exp(-30.0 * (local_vy - target_vy) ** 2)
 
         # 6. 발 교대 체공 보상 (Air-time / Stepping reward)
-        # 발을 들어올려 디뎠을 때 보상 부여 (제자리 서서 가만히 있기 꼼수 차단!)
+        # 발을 번갈아 들어올려 딛을 때 큰 보너스 부여
         r_air_time = 0.0
         for i in range(2):
             if current_contacts[i]:
-                # 방금 착지한 경우: 적절한 체공 시간(0.08초 ~ 0.35초)이었을 때 보상
+                # 방금 착지한 경우: 적절한 체공 시간(0.06초 ~ 0.35초)이었을 때 보상
                 if not self.last_feet_contact[i] and self.feet_air_time[i] > 0.06:
-                    r_air_time += 4.0 * min(self.feet_air_time[i], 0.35)
+                    r_air_time += 6.0 * min(self.feet_air_time[i], 0.35)
                 self.feet_air_time[i] = 0.0
             else:
                 # 공중에 떠 있는 동안 체공 시간 누적
                 self.feet_air_time[i] += self.ctrl_dt
         self.last_feet_contact = current_contacts.copy()
 
+        # - 양발 모두 땅에 붙이고 가만히 서 있을 때 감점 (제자리 정지 페널티)
+        p_stand_still = -0.8 if (left_contact and right_contact) else 0.0
+
         # =====================================================================
-        # ⚠️ 감점 요인 (페널티: 모터 과다 사용 방지 & 관절 떨림 억제)
+        # ⚠️ 감점 요인 (페널티: 후진 방지 + 모터 부하 + 관절 떨림)
         # =====================================================================
-        # - 모터 과다 사용 처벌 (토크 부하 페널티: 모터 발열 및 무리 방지)
+        # - 뒤로 후진하거나 뒤로 밀리는 것 강력 처벌 (뒤로 넘어짐 방지)
+        p_backward = -15.0 * max(0.0, -local_vx)
+
+        # - 모터 과다 사용 처벌 (토크 부하 페널티)
         motor_torque_sq = float(np.sum(np.square(self.data.actuator_force)))
         p_torque = -0.002 * motor_torque_sq
 
         # - 관절 급격한 떨림 억제 (모터 기어 마모 방지)
         action_diff = action - self.last_action
-        p_smooth = -0.06 * float(np.sum(action_diff ** 2))
+        p_smooth = -0.05 * float(np.sum(action_diff ** 2))
 
         # - 머리가 앞으로 꺾여 쏠리는 것 억제 (목/머리 피치 제어)
         p_head = -1.8 * (max(0.0, -neck_pitch) ** 2 + max(0.0, -head_pitch) ** 2)
@@ -245,7 +254,7 @@ class OpenDuckEnv(gym.Env):
 
         reward = (
             r_upright + r_height + r_alive + r_forward + r_sway + r_air_time +
-            p_torque + p_smooth + p_head + p_spin + p_energy
+            p_stand_still + p_backward + p_torque + p_smooth + p_head + p_spin + p_energy
         )
         self.last_action = action.copy()
 
