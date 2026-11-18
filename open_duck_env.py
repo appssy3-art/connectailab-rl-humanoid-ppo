@@ -85,6 +85,7 @@ class OpenDuckEnv(gym.Env):
         self.phase = 0.0
         self.gait_freq = 1.25  # 1.25 Hz 보행 클럭
         self.last_action = np.zeros(self.nu, dtype=np.float32)
+        self.prev_ctrl = self.home_ctrl.copy()
 
         # 발 접촉 및 체공 시간 추적 (Air-time)
         self.feet_air_time = np.zeros(2, dtype=np.float32)  # [left, right]
@@ -146,6 +147,7 @@ class OpenDuckEnv(gym.Env):
         self.step_count = 0
         self.phase = 0.0
         self.last_action = np.zeros(self.nu, dtype=np.float32)
+        self.prev_ctrl = self.data.ctrl.copy()
         self.feet_air_time = np.zeros(2, dtype=np.float32)
         self.last_feet_contact = np.ones(2, dtype=bool)
         self.prev_x = float(self.data.qpos[0])
@@ -162,9 +164,28 @@ class OpenDuckEnv(gym.Env):
         self.step_count += 1
         self.phase = (self.phase + 2.0 * math.pi * self.gait_freq * self.ctrl_dt) % (2.0 * math.pi)
 
-        # 액추에이터 목표 위치 제어
-        target_ctrl = self.home_ctrl + self.action_scale * action
-        self.data.ctrl[:] = target_ctrl
+        # 1. CPG 보행 리듬 (기본 오리 발걸음 및 좌우 체중이동 모멘텀)
+        cpg = np.zeros(self.nu, dtype=np.float32)
+        sway = 0.08 * math.sin(self.phase)
+        cpg[1] = -sway   # left_hip_roll
+        cpg[10] = -sway  # right_hip_roll
+
+        swing = 0.12 * math.sin(self.phase)
+        cpg[2] = -swing                     # left_hip_pitch
+        cpg[11] = swing                     # right_hip_pitch
+        cpg[3] = 0.12 * max(0.0, swing)     # left_knee lift
+        cpg[12] = 0.12 * max(0.0, -swing)   # right_knee lift
+        cpg[4] = -0.06 * max(0.0, swing)    # left_ankle
+        cpg[13] = -0.06 * max(0.0, -swing)  # right_ankle
+
+        # 2. 강화학습 잔차 제어 (Residual RL) + 저역통과 필터 (EMA 65:35, 다리 후들거림 원천 차단!)
+        raw_target = self.home_ctrl + cpg + self.action_scale * action
+        filtered_ctrl = 0.65 * self.prev_ctrl + 0.35 * raw_target
+
+        # 3. STS3215 모터 각속도 한계(스텝당 0.09 rad) 클리핑 (급격한 관절 떨림 방지)
+        filtered_ctrl = np.clip(filtered_ctrl, self.prev_ctrl - 0.09, self.prev_ctrl + 0.09)
+        self.prev_ctrl = filtered_ctrl.copy()
+        self.data.ctrl[:] = filtered_ctrl
 
         # 50Hz 제어를 위해 10번의 물리 서브스텝 (sim_dt = 0.002s)
         for _ in range(self.decimation):
