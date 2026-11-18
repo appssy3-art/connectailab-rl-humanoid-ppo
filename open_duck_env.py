@@ -166,20 +166,24 @@ class OpenDuckEnv(gym.Env):
 
         # 1. CPG 보행 리듬 (기본 오리 발걸음 및 좌우 체중이동 모멘텀)
         cpg = np.zeros(self.nu, dtype=np.float32)
-        sway = 0.08 * math.sin(self.phase)
-        cpg[1] = -sway   # left_hip_roll
+        sway = 0.10 * math.sin(self.phase)
+        cpg[1] = -sway   # left_hip_roll (좌우 체중이동)
         cpg[10] = -sway  # right_hip_roll
 
-        swing = 0.12 * math.sin(self.phase)
-        cpg[2] = -swing                     # left_hip_pitch
-        cpg[11] = swing                     # right_hip_pitch
-        cpg[3] = 0.12 * max(0.0, swing)     # left_knee lift
-        cpg[12] = 0.12 * max(0.0, -swing)   # right_knee lift
-        cpg[4] = -0.06 * max(0.0, swing)    # left_ankle
-        cpg[13] = -0.06 * max(0.0, -swing)  # right_ankle
+        # 전진 스윙: 왼쪽 +가 전진, 오른쪽 -가 전진 (물리 기하학 정확 일치!)
+        swing = 0.22 * math.sin(self.phase)
+        cpg[2] = swing                      # left_hip_pitch (+ 전진)
+        cpg[11] = -swing                    # right_hip_pitch (- 전진)
+        cpg[3] = 0.28 * max(0.0, swing)     # left_knee lift (확실한 발 들어올림 ~6cm)
+        cpg[12] = 0.28 * max(0.0, -swing)   # right_knee lift
+        cpg[4] = -0.12 * max(0.0, swing)    # left_ankle
+        cpg[13] = -0.12 * max(0.0, -swing)  # right_ankle
 
         # 2. 강화학습 잔차 제어 (Residual RL) + 저역통과 필터 (EMA 65:35, 다리 후들거림 원천 차단!)
         raw_target = self.home_ctrl + cpg + self.action_scale * action
+        # 머리/목 관절 꼿꼿이 고정 ("고개만 까닥까닥" 꼼수 원천 봉쇄!)
+        raw_target[5:9] = self.home_ctrl[5:9]
+
         filtered_ctrl = 0.65 * self.prev_ctrl + 0.35 * raw_target
 
         # 3. STS3215 모터 각속도 한계(스텝당 0.09 rad) 클리핑 (급격한 관절 떨림 방지)
@@ -222,11 +226,11 @@ class OpenDuckEnv(gym.Env):
         # 3. 생존 보너스 대폭 축소 (제자리 서 있기 꼼수 차단!)
         r_alive = 0.05
 
-        # 4. 적극적 전진 보행 속도 & 거리 전진 보상 (Target speed 0.20 m/s)
-        # - 목표 속도 0.20 m/s 추종 가우시안 보상
-        r_vel = 4.0 * math.exp(-25.0 * (local_vx - 0.20) ** 2)
-        # - 앞으로 나아갈 때마다 전진 거리에 비례하여 강력한 전진 보너스 (+80점/m)
-        r_progress = 80.0 * forward_progress
+        # 4. 적극적 전진 보행 속도 & 거리 전진 보상 (Target speed 0.22 m/s)
+        # - 목표 속도 0.22 m/s 추종 가우시안 보상
+        r_vel = 4.0 * math.exp(-25.0 * (local_vx - 0.22) ** 2)
+        # - 앞으로 나아갈 때마다 전진 거리에 비례하여 강력한 전진 보너스 (+120점/m)
+        r_progress = 120.0 * forward_progress
         r_forward = r_vel + r_progress
 
         # 5. 좌우 체중 이동 유도 (Lateral Sway, 오리 걸음 리듬 1.25 Hz)
