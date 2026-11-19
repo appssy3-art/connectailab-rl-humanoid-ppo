@@ -217,20 +217,20 @@ class OpenDuckEnv(gym.Env):
         # =====================================================================
         # 🎯 밸런스 & 보행 보상 함수 (1. 기립 + 2. 좌우 체중이동 + 3. 적극적 전진 보행)
         # =====================================================================
-        # 1. 꼿꼿한 기립 보상 (Upright bonus)
-        r_upright = 3.0 * max(0.0, upvector_z)
+        # 1. 꼿꼿한 기립 보상 (기본 균형)
+        r_upright = 1.0 * max(0.0, upvector_z)
 
         # 2. 적정 높이 유지 보상 (z ≈ 0.16m)
-        r_height = 2.0 * math.exp(-40.0 * (trunk_z - 0.16) ** 2)
+        r_height = 0.5 * math.exp(-40.0 * (trunk_z - 0.16) ** 2)
 
-        # 3. 생존 보너스 대폭 축소 (제자리 서 있기 꼼수 차단!)
-        r_alive = 0.05
+        # 3. 생존 보너스 제거 (가만히 서서 꿀빨기 원천 봉쇄!)
+        r_alive = 0.0
 
-        # 4. 적극적 전진 보행 속도 & 거리 전진 보상 (Target speed 0.22 m/s)
-        # - 목표 속도 0.22 m/s 추종 가우시안 보상
-        r_vel = 4.0 * math.exp(-25.0 * (local_vx - 0.22) ** 2)
-        # - 앞으로 나아갈 때마다 전진 거리에 비례하여 강력한 전진 보너스 (+120점/m)
-        r_progress = 120.0 * forward_progress
+        # 4. 강력한 전진 보행 보상 (Forward Velocity & Progress)
+        # - 전진 속도 비례 보상 (최대 0.35 m/s)
+        r_vel = 12.0 * min(max(local_vx, 0.0), 0.35)
+        # - 앞으로 나아갈 때마다 전진 거리에 비례하여 강력한 전진 보너스 (+150점/m)
+        r_progress = 150.0 * forward_progress
         r_forward = r_vel + r_progress
 
         # 5. 좌우 체중 이동 유도 (Lateral Sway, 오리 걸음 리듬 1.25 Hz)
@@ -251,8 +251,10 @@ class OpenDuckEnv(gym.Env):
                 self.feet_air_time[i] += self.ctrl_dt
         self.last_feet_contact = current_contacts.copy()
 
-        # - 양발 모두 땅에 붙이고 가만히 서 있을 때 감점 (제자리 정지 페널티)
-        p_stand_still = -0.8 if (left_contact and right_contact) else 0.0
+        # - 가만히 멈춰있거나 거북이 속도(<0.08m/s)일 때 강력 처벌 (제자리 정지 페널티)
+        p_lazy = -2.0 if local_vx < 0.08 else 0.0
+        # - 양발 모두 땅에 붙이고 가만히 서 있을 때 감점
+        p_stand_still = -1.5 if (left_contact and right_contact) else 0.0
 
         # =====================================================================
         # ⚠️ 감점 요인 (페널티: 후진 방지 + 모터 부하 + 관절 떨림)
@@ -279,7 +281,7 @@ class OpenDuckEnv(gym.Env):
 
         reward = (
             r_upright + r_height + r_alive + r_forward + r_sway + r_air_time +
-            p_stand_still + p_backward + p_torque + p_smooth + p_head + p_spin + p_energy
+            p_lazy + p_stand_still + p_backward + p_torque + p_smooth + p_head + p_spin + p_energy
         )
         self.last_action = action.copy()
 

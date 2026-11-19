@@ -118,9 +118,9 @@ def train(gui=False, total_timesteps=150000, n_envs=4, lr=3e-4):
     print("=" * 75)
     print(f" • 총 학습 스텝: {total_timesteps:,} steps")
     print(f" • 병렬 환경: {n_envs if not gui else 1}개 Subproc/Vectorized Envs")
-    print(f" • 추가 질량: 눈 사이 200g 철판 + 가슴 700g 카운터웨이트")
+    print(f" • 추가 질량: 눈 사이 60g 철판 + 상체 250g 무게추 (모터 부하 65% 절감)")
     print(f" • 동작 원리: 넘어지면 즉시 리셋 후 다음 에피소드로 연속 도전!")
-    print(f" • 특화 보상: 좌우 체중이동(Sway) + 발 교대 체공(Air-Time) + 머리 기립 제어")
+    print(f" • 특화 보상: 머리 고정 + CPG 전진 보행 + 좌우 체중이동(Sway) + 발 교대 체공(Air-Time)")
     print("=" * 75)
 
     if gui:
@@ -175,6 +175,7 @@ def train(gui=False, total_timesteps=150000, n_envs=4, lr=3e-4):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Open Duck Mini v2 PPO Super-Fast Training")
     parser.add_argument("--gui", action="store_true", help="3D 실시간 뷰어 활성화 (1개 환경)")
+    parser.add_argument("--no-gui", action="store_true", help="3D 화면 없이 백그라운드 초고속 학습")
     parser.add_argument("--steps", type=int, default=150000, help="총 학습 스텝 수")
     parser.add_argument("--envs", type=int, default=4, help="병렬 환경 수")
     parser.add_argument("--lr", type=float, default=3e-4, help="학습률")
